@@ -7,12 +7,17 @@
   "type": "module",
   "main": "backend/index.js",
   "scripts": {
-    "test": "node backend/index.js"
+    "test": "python backend/app.py"
   },
   "dependencies": {
-    "jsdom": "^26.1.0"
+    "esbuild": "^0.25.9",
+    "express": "^5.1.0",
+    "jsdom": "^26.1.0",
+    "react": "^19.1.1",
+    "redoc-express": "^2.1.0"
   },
   "devDependencies": {
+    "@types/express": "^5.0.3",
     "typescript": "^5.9.2"
   }
 }
