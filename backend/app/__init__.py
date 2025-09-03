@@ -29,7 +29,7 @@ def getAbsolutePath(path):
 
 FRONTEND_FOLDER = getAbsolutePath(os.path.join('..', '..', 'frontend'))
 
-app = flask.Flask(__name__, static_url_path="/")
+app = flask.Flask(__name__, static_url_path=None)
 
 """API endpoints"""
 

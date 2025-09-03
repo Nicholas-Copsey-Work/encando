@@ -104,8 +104,8 @@ class AccessibilityChecker:
         bg = bg_match.group(1).strip() if bg_match else '#fff'
 
         try:
-            color_rgb = rgb(*ImageColor.getrgb(color))
-            bg_rgb = rgb(*ImageColor.getrgb(bg))
+            color_rgb = ImageColor.getrgb(color)
+            bg_rgb = ImageColor.getrgb(bg)
             return color_rgb, bg_rgb
         except:
             return None, None
@@ -163,7 +163,7 @@ class AccessibilityChecker:
         return (maximum + 0.05) / (minium + 0.05)
 
     def checkLinks(self):
-        generic_phrases = {'click here', 'read more', 'more', 'here', 'link', 'learn more'}
+        generic_phrases = {'click here', 'read more', 'more', 'here', 'link', 'learn more', 'submit'}
         for link in self.soup.find_all('a'):
             text = link.get_text().strip().lower()
             if text in generic_phrases:
@@ -194,32 +194,33 @@ class AccessibilityChecker:
     def checkLang(self, soup):
         html_tag = soup.find('html')
         if not html_tag or not html_tag.get('lang'):
-            self.issues.append("Missing or empty 'lang' attribute on <html>.")
+            self.reportIssue("DOC_LANG_MISSING", "Missing or empty 'lang' attribute on <html>.", html_tag)
 
     def checkTitle(self, soup):
         title_tag = soup.find('title')
         if not title_tag or not title_tag.text.strip():
-            self.issues.append("Missing or empty <title> tag.")
+            self.reportIssue("DOC_TITLE_MISSING", "Missing or empty <title> tag.", title_tag)
 
     def checkImages(self, soup):
         for img in soup.find_all('img'):
             alt = img.get('alt')
             if alt is None:
-                self.issues.append("<img> tag missing 'alt' attribute.")
+                self.reportIssue("IMG_ALT_MISSING", "<img> tag missing 'alt' attribute.", img)
             elif len(alt) > 120:
-                self.issues.append(f"<img> alt text too long ({len(alt)} characters).")
+                self.reportIssue("IMG_ALT_LENGTH", f"<img> alt text too long ({len(alt)} characters).", img)
 
     def checkHeadings(self, soup):
         headings = soup.find_all(re.compile('^h[1-6]$'))
         h1_count = sum(1 for h in headings if h.name == 'h1')
-        if h1_count != 1:
-            self.issues.append(f"Document should contain exactly one <h1>. Found {h1_count}.")
+        if h1_count > 1:
+            for heading in headings:
+                self.reportIssue("HEADING_MULTIPLE_H1", f"Document should contain exactly one <h1>. Found {h1_count}.", heading)
 
         last_level = 0
         for heading in headings:
             level = int(heading.name[1])
             if last_level and level > last_level + 1:
-                self.issues.append(f"Skipped heading level: {heading.name} after h{last_level}.")
+                self.reportIssue("HEADING_ORDER", f"Skipped heading level: {heading.name} after h{last_level}.", heading)
             last_level = level
 
     def parseColors(self, style):
@@ -230,8 +231,8 @@ class AccessibilityChecker:
         bg = bg_match.group(1).strip() if bg_match else '#fff'
 
         try:
-            color_rgb = rgb(*ImageColor.getrgb(color))
-            bg_rgb = rgb(*ImageColor.getrgb(bg))
+            color_rgb = ImageColor.getrgb(color)
+            bg_rgb = ImageColor.getrgb(bg)
             return color_rgb, bg_rgb
         except:
             return None, None
@@ -257,32 +258,32 @@ class AccessibilityChecker:
                     is_large = self.isLargeText(parent)
                     required_ratio = 3.0 if is_large else 4.5
                     if contrast_ratio < required_ratio:
-                        snippet = tag.strip().replace('\n', ' ')[:30]
-                        self.issues.append(
-                            f"Low contrast ({contrast_ratio:.2f}:1) for text: '{snippet}...'"
+                        self.reportIssue(
+                            "COLOR_CONTRAST", f"Low contrast ({contrast_ratio:.2f}:1). Expected is {required_ratio:.2f} or greater.", tag
                         )
                 except:
                     continue
+        def ratio(color1, color2):
+            def getLuminance(red, green, blue):
+                RED_CONST = 0.2126
+                GREEN_CONST = 0.7152
+                BLUE_CONST = 0.0722
+                GAMMA = 2.4
+                calculate_luminance = (
+                    lambda scale:
+                        lambda determiner:
+                            lambda val:
+                                determiner(scale(val))
+                )(lambda _: _ / 255)(lambda _ : _ / 12.92 if _ <= 0.3928 else pow((_ + 0.055) / 1.055, GAMMA))
+                scaled_colors = list(map(calculate_luminance, [red, green, blue]))
+                return scaled_colors[0] * RED_CONST + scaled_colors[1] * GREEN_CONST + scaled_colors[2] * BLUE_CONST
+            if(fg is None or bg is None):
+                return 0
 
-        def getLuminance(red, green, blue):
-            RED_CONST = 0.2126
-            GREEN_CONST = 0.7152
-            BLUE_CONST = 0.0722
-            GAMMA = 2.4
-            calculate_luminance = (
-                lambda scale:
-                    lambda determiner:
-                        lambda val:
-                            determiner(scale(val))
-            )(lambda _: _ / 255)(lambda _ : _ / 12.92 if _ <= 0.3928 else pow((_ + 0.055) / 1.055, GAMMA))
-            scaled_colors = list(map(calculate_luminance, [red, green, blue]))
-            return scaled_colors[0] * RED_CONST + scaled_colors[1] * GREEN_CONST + scaled_colors[2] * BLUE_CONST
+            luminance1 = getLuminance(**color1)
+            luminance2 = getLuminance(**color2)
 
+            minium = min(luminance1, luminance2)
+            maximum = max(luminance1, luminance2)
 
-        luminance1 = getLuminance(**color1)
-        luminance2 = getLuminance(**color2)
-
-        minium = min(luminance1, luminance2)
-        maximum = max(luminance1, luminance2)
-
-        return (maximum + 0.05) / (minium + 0.05)
+            return (maximum + 0.05) / (minium + 0.05)
