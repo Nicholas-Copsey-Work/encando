@@ -1,5 +1,7 @@
 #!/bin/bash
 
+INCLUDED_FILES="backend frontend package.json package-lock.json LICENSE"
+
 FILE="program.zip"
 
 if [ -e $FILE ]; then
@@ -9,4 +11,4 @@ fi
 
 ZIP_LOCATION=$(which zip)
 
-$ZIP_LOCATION -r $FILE backend frontend package.json package-lock.json LICENSE -x *.pyc __pycache__/*
+$ZIP_LOCATION -r $FILE $INCLUDED_FILES -x *.pyc __pycache__/*

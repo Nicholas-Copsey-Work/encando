@@ -2,14 +2,22 @@
 
 * Python >= v3.13.2 installed
 * NPM >= v11.5.2 installed
-* Linux system with zip 3.0 installed, or gitbash on Windows with the zip command available.
+* Ubuntu/Debian system, or gitbash on Windows.
 
 # Installation
 
 1. Extract the zip file into a directory
 2. CD to the directory that the zip file was decompressed into.
-3. Run `npm run test` in a terminal.
-4. Go to `http://localhost:5000` and input html.
+3. Run `python -m venv ./venv`
+4. Active Virtual Environment
+    * Windows
+        * Run `source venv/Scripts/activate` in the terminal.
+    * Ubuntu/Debian
+        * Run `source venv/bin/activate` in the terminal.
+4. Run `python -m pip install -r backend/requirements.txt` in the terminal.
+5. Run `npm i` in the terminal.
+4. Run `npm run test` in the terminal.
+5. Go to `http://localhost:5000` and input html.
 
     * An example is below 
 ```html

@@ -13,11 +13,5 @@
     "esbuild": "^0.25.9",
     "jsdom": "^26.1.0",
     "react": "^19.1.1"
-  },
-  "devDependencies": {
-    "@types/express": "^5.0.3",
-    "child_process": "^1.0.2",
-    "os": "^0.1.2",
-    "typescript": "^5.9.2"
   }
 }
