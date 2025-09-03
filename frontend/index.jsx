@@ -1,4 +1,5 @@
 const { useState } = React;
+const api = new API();
 
 const App = () => {
     const [input, setInput] = useState('');
@@ -7,14 +8,7 @@ const App = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch('/v1/compliance', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ html: input }),
-            });
-            const result = await res.json();
+            const result = await api.compliance.post({ html: input });
             setResponse(result);
         } catch (error) {
             console.error('Error:', error);
